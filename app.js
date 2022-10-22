@@ -15,6 +15,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api', apiRouter);
 
-app.listen(8000, () => {
+app.listen(process.env.SERVER_PORT, () => {
     console.log("server start");
 });
