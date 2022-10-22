@@ -2,16 +2,20 @@ const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 
+// getStationInfoData = 서울시 주유소 정보
+// getAverageCostInfoData = 전국 평균 유가 정보
+// getStationConstInfoData = 서울시 주유소 별 가격 정보
 const getStationInfoData = async () => {
-    const URL = "https://api.odcloud.kr/api/15098386/v1/uddi:eb2dd0b5-0cb9-4e99-b0a5-971648aece86";
+    const URL = process.env.API_STATION_URL || "https://api.odcloud.kr/api/15098386/v1/uddi:eb2dd0b5-0cb9-4e99-b0a5-971648aece86";
     const config = {
         params: {
             page: 1,
             perPage: 500,
-            serviceKey: "d/ZfrEObMBCElwxZURE104AzE7YyD5NVehQcE3OUfjzrqBUJHkngUv8r185rUfgOpIokHyJ31MxBg5Wo2IQMUw=="
+            serviceKey: process.env.API_DATA_KEY || "d/ZfrEObMBCElwxZURE104AzE7YyD5NVehQcE3OUfjzrqBUJHkngUv8r185rUfgOpIokHyJ31MxBg5Wo2IQMUw==",
         }
     };
     const res = await axios.get(URL, config);
+    console.log({data: res.data.data, count: res.data.totalCount});
     return {data: res.data.data, count: res.data.totalCount};
 }
 
