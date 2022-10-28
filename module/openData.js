@@ -73,6 +73,7 @@ const getStationCostInfoDataFromCsv = () => {
     return res;
 }
 
+console.log(getStationCostInfoDataFromCsv());
 const getNearStation = async (params) => {
     const {x, y, oil_type, sort} = params;
     const URL = process.env.API_NEAR_STATION_URL;

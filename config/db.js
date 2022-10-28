@@ -22,7 +22,7 @@ connection.connect((err) => {
     price_gasoline INT,
     price_diesel INT,
     price_kerosene INT
-    );`;
+    )DEFAULT CHARSET=utf8;`;
 
     connection.query(createTableStation, (err, res) => {
         if(err) throw err;
