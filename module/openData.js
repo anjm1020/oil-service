@@ -74,7 +74,7 @@ const getStationCostInfoData = () => {
 }
 
 const getNearStation = async (params) => {
-    const {x, y, oilType, sort} = params;
+    const {x, y, oil_type, sort} = params;
     const URL = process.env.API_NEAR_STATION_URL;
     const oilCodeMap = {
         pg: {code: "B034", name: "고급휘발유"},
@@ -89,7 +89,7 @@ const getNearStation = async (params) => {
             x,
             y,
             radius: 5000,
-            prodcd: oilCodeMap[oilType].code,
+            prodcd: oilCodeMap[oil_type].code,
             sort,
         }
     };

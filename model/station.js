@@ -49,6 +49,7 @@ class Station {
 
     static findOneLowestPrice = (param) => {
         const {oil_type, region} = param;
+        console.log(param);
         const type_mapper = {
             pg: "price_premium_gasoline",
             g: "price_gasoline",
