@@ -3,7 +3,6 @@ const router = express.Router();
 const Station = require("../model/station");
 const OpenData = require("../module/openData");
 
-
 router.get("/stations", async (req, res) => {
     const query = req.query;
     if (!query.page || !query.size) {
@@ -12,6 +11,16 @@ router.get("/stations", async (req, res) => {
     try {
         const data = await Station.findAll(query);
         res.send({count: data.length, data});
+    } catch (e) {
+        console.error(e);
+    }
+});
+
+router.get("/stations/nearby", async (req, res) => {
+    const {x, y, oilType,sort} = req.query;
+    try {
+        const data = await OpenData.getNearStation({x, y, oilType,sort});
+        res.send(data);
     } catch (e) {
         console.error(e);
     }
@@ -34,7 +43,6 @@ router.get("/stations/:stationId", async (req, res) => {
     const {stationId: station_id} = req.params;
     try {
         const data = await Station.findOneById(station_id);
-        console.log(data);
         if (data.length == 0) {
             res.status(404).send({errMsg: "Not Found"})
         }
@@ -43,16 +51,5 @@ router.get("/stations/:stationId", async (req, res) => {
         console.error(e);
     }
 });
-
-router.get("/stations/nearby", async (req, res) => {
-    const {x, y, oilType} = req.params;
-    try {
-
-    } catch (e) {
-        console.error(e);
-    }
-
-});
-
 
 module.exports = router;
