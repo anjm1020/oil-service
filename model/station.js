@@ -1,6 +1,4 @@
 const db = require("../config/db");
-const openData = require("../module/openData");
-const e = require("express");
 
 class Station {
     static insert = (data) => {

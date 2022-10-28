@@ -1,10 +1,8 @@
+require("dotenv").config();
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 
-// getStationInfoData = 서울시 주유소 정보
-// getAverageCostInfoData = 전국 평균 유가 정보
-// getStationConstInfoData = 서울시 주유소 별 가격 정보
 const getStationInfoData = async () => {
     const URL = process.env.API_STATION_URL;
     const config = {
@@ -15,27 +13,21 @@ const getStationInfoData = async () => {
         }
     };
     const res = await axios.get(URL, config);
-    console.log({data: res.data.data, count: res.data.totalCount});
     return {data: res.data.data, count: res.data.totalCount};
 }
 
-const getAverageCostInfoData = () => {
-    const FNAME = "average.csv";
-    const csvPath = path.join(__dirname, 'csv', FNAME);
-    const data = fs.readFileSync(csvPath, "utf-8");
-
-    const TODAY = 2;
-    const rows = data.split("\r\n");
-    const row = rows[TODAY].split(",");
-
-    console.log(rows[0].split(",")[0]);
-
-    return {
-        average_price_premium_gasoline: row[1],
-        average_price_gasoline: row[2],
-        average_price_diesel: row[3],
-        average_price_kerosene: row[4],
+const getAverageCostInfoData = async () => {
+    const URL = process.env.API_AVERAGE_COST_URL;
+    console.log(URL);
+    const config = {
+        params: {
+            code: process.env.API_OIL_KEY,
+            out: "json",
+            sido: "01"
+        }
     };
+    const res = await axios.get(URL, config);
+    return {data: res.data.RESULT.OIL};
 }
 
 const getStationCostInfoData = () => {
@@ -81,8 +73,45 @@ const getStationCostInfoData = () => {
     return res;
 }
 
+const getNearStation = async () => {
+    const URL = process.env.API_NEAR_STATION_URL;
+    console.log(URL);
+    const config = {
+        params: {
+            code: process.env.API_OIL_KEY,
+            out: "json",
+            x : 314000,
+            y : 544000,
+            radius : 5000,
+            prodcd : "B027",
+            sort : 2,
+        }
+    };
+    const res = await axios.get(URL, config);
+    console.log(res.data.RESULT.OIL);
+    return {data: res.data};
+}
+
+const getYosoStation = async () => {
+    const URL = process.env.API_YOSO_STATION_URL;
+    console.log(URL);
+    const config = {
+        params: {
+            code: process.env.API_OIL_KEY,
+            out : "json",
+            area : "01"
+        }
+    };
+    const res = await axios.get(URL, config);
+    return {data: res};
+}
+
+getYosoStation();
+
 module.exports = {
     getStationInfoData,
     getAverageCostInfoData,
     getStationCostInfoData,
+    getNearStation,
+    getYosoStation,
 };

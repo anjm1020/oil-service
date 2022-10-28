@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Station = require("../model/station");
+const OpenData = require("../module/openData");
 
 
 router.get("/stations", async (req, res) => {
@@ -41,6 +42,16 @@ router.get("/stations/:stationId", async (req, res) => {
     } catch (e) {
         console.error(e);
     }
+});
+
+router.get("/stations/nearby", async (req, res) => {
+    const {x, y, oilType} = req.params;
+    try {
+
+    } catch (e) {
+        console.error(e);
+    }
+
 });
 
 
