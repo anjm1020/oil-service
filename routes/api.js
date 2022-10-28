@@ -22,7 +22,7 @@ router.get("/stations/nearby", async (req, res) => {
     const {x, y, target: oil_type, sort} = req.query;
     try {
         const data = await OpenData.getNearStation({x, y, oil_type,sort});
-        res.send(data);
+        res.send({count: data.length, data});
     } catch (e) {
         console.error(e);
     }

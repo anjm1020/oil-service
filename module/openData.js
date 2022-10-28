@@ -30,8 +30,8 @@ const getAverageCostInfoData = async () => {
     return {data: res.data.RESULT.OIL};
 }
 
-const getStationCostInfoData = () => {
-    const FNAME = "individual.csv";
+const getStationCostInfoDataFromCsv = () => {
+    const FNAME = process.env.CSV_NAME_STATION_COST;
     const csvPath = path.join(__dirname, 'csv', FNAME);
     const data = fs.readFileSync(csvPath, "utf-8");
 
@@ -137,7 +137,7 @@ const getYosoStation = async () => {
 module.exports = {
     getStationInfoData,
     getAverageCostInfoData,
-    getStationCostInfoData,
+    getStationCostInfoDataFromCsv,
     getNearStation,
     getYosoStation,
 };

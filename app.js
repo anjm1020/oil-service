@@ -2,7 +2,9 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const schedule = require("node-schedule");
 
+const batch = require("./module/batch");
 const apiRouter = require('./routes/api');
 
 const app = express();
@@ -17,4 +19,9 @@ app.use('/api', apiRouter);
 
 app.listen(process.env.SERVER_PORT, () => {
     console.log("server start");
+    schedule.scheduledJobs('0 0 0 * * *', ()=>{
+        batch()
+            .then(() => console.log("Batch jobs complete\n"))
+            .catch(e => console.error(e));
+    });
 });
