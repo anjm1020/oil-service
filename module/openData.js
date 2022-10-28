@@ -116,7 +116,7 @@ const getNearStation = async (params) => {
         })
     }
 
-    return {type:oilCodeMap[oilType].name, data};
+    return {type:oilCodeMap[oil_type].name, data};
 }
 
 const getYosoStation = async () => {
