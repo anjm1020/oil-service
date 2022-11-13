@@ -1,4 +1,3 @@
-require("dotenv").config();
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
@@ -73,7 +72,6 @@ const getStationCostInfoDataFromCsv = () => {
     return res;
 }
 
-console.log(getStationCostInfoDataFromCsv());
 const getNearStation = async (params) => {
     const {x, y, oil_type, sort} = params;
     const URL = process.env.API_NEAR_STATION_URL;
