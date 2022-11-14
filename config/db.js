@@ -1,33 +1,11 @@
 require("dotenv").config();
-const mysql = require("mysql");
+const mongoose = require("mongoose");
 
-const connection = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE
-});
+module.exports = () => {
+    mongoose.connect(process.env.DB_URI);
 
-connection.connect((err) => {
-    if (err) return console.error(err);
+    const db = mongoose.connection;
 
-    let createTableStation = `CREATE TABLE IF NOT EXISTS stations(
-    station_id VARCHAR(30) PRIMARY KEY,
-    region VARCHAR(50),
-    name VARCHAR(50),
-    address VARCHAR(128),
-    brand VARCHAR(20),
-    isSelf BOOLEAN,
-    price_premium_gasoline INT,
-    price_gasoline INT,
-    price_diesel INT,
-    price_kerosene INT
-    )DEFAULT CHARSET=utf8;`;
-
-    connection.query(createTableStation, (err, res) => {
-        if(err) throw err;
-    })
-});
-
-module.exports = connection;
-
+    db.on("error", (error) => console.log("❗ DB Error", error));
+    db.once("open", () => console.log("✅ Connected to DB!"));
+}

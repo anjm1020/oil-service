@@ -1,13 +1,11 @@
 require("dotenv").config();
 
-const csvParser = require("csv-parse");
 const fs = require("fs");
 const path = require("path");
 const dayjs = require("dayjs");
 
 const S3 = require("../config/objectStorage");
 const db = require("../config/db");
-const e = require("express");
 
 const deleteOldFile = async () => {
     const fileIdentifier = dayjs().format("YYYY-MM-DD").subtract(1, 'day') + ".csv";
