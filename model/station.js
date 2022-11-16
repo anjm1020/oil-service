@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 
 const stationSchema = new mongoose.Schema({
+    station_id: String,
     region: String,
     name: String,
     address: String,
@@ -12,7 +12,6 @@ const stationSchema = new mongoose.Schema({
     price_diesel : Number,
     price_kerosene : Number,
 });
-
 
 module.exports = mongoose.model("Station", stationSchema);
 

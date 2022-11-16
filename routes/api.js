@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require('express');
 const router = express.Router();
-const Station = require("../model/station");
+const Station = require("../model/station.ctrl");
 const OpenData = require("../module/openData");
 
 router.get("/stations", async (req, res) => {
@@ -44,7 +44,6 @@ router.get("/stations/lowest_price", async (req, res) => {
 
 router.get("/stations/:stationId", async (req, res) => {
     const {stationId: station_id} = req.params;
-    console.log("asdsadsad");
     try {
         const data = await Station.findOneById(station_id);
         if (data.length == 0) {

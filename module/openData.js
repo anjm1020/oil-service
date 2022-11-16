@@ -1,6 +1,7 @@
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
+const dayjs = require("dayjs");
 
 const getStationInfoData = async () => {
     const URL = process.env.API_STATION_URL;
@@ -30,9 +31,9 @@ const getAverageCostInfoData = async () => {
 }
 
 const getStationCostInfoDataFromCsv = () => {
-    const FNAME = process.env.CSV_NAME_STATION_COST;
-    const csvPath = path.join(__dirname, 'csv', FNAME + ".csv");
-    const data = fs.readFileSync(csvPath, "utf-8");
+    const fileIdentifier = dayjs().format("YYYY-MM-DD") + ".csv";
+    const filePath = path.join(__dirname, path.join("csv", fileIdentifier));
+    const data = fs.readFileSync(filePath, "utf-8");
 
     const rows = data.split("\r\n");
     let curr = 4;
@@ -127,9 +128,7 @@ const getYosoStation = async () => {
         }
     };
     const res = await axios.get(URL, config);
-    console.log(res);
     const data = JSON.parse(res);
-    console.log(data);
     return {data};
 }
 
