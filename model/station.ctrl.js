@@ -14,7 +14,7 @@ const findAll = async (param) => {
 };
 
 const findOneById = async (id) => {
-    return Station.findOne({station_id: id});
+    return Station.find({station_id: id});
 }
 
 const findOneLowestPrice = async (param) => {

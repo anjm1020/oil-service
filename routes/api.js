@@ -36,7 +36,7 @@ router.get("/stations/lowest_price", async (req, res) => {
     }
     try {
         const data = await Station.findOneLowestPrice({oil_type, region});
-        res.send(data[0]);
+        res.send(data);
     } catch (e) {
         console.error(e);
     }
