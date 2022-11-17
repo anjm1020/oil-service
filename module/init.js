@@ -4,12 +4,12 @@ const db = require("../config/db");
 
 const init = async () => {
     await db();
-    let dataRows = openData.getStationCostInfoDataFromCsv();
     const documentsCount = await Station.countDocuments();
     if(documentsCount > 0) {
         console.log("Already Filled");
         return;
     }
+    let dataRows = await openData.getStationCostInfoDataFromCsv();
     for (let i = 0; i < dataRows.length; i++) {
         let data = dataRows[i];
         try {

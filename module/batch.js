@@ -1,91 +1,148 @@
-const fs = require("fs");
-const path = require("path");
-const dayjs = require("dayjs");
+const chromium = require("chrome-aws-lambda");
+const AWS = require('aws-sdk');
+const xlsx = require('xlsx');
+const fs = require('fs');
+const readline = require('readline');
+const path = require('path');
+const Station = require('../model/station');
 
-const S3 = require("../config/objectStorage");
-const db = require("../config/db");
-const Station = require("../model/station");
+const ROOT = __filename;
+const TMP = path.join(path.join(ROOT, '..'), 'tmp');
 
-const deleteOldFile = async () => {
-    const fileIdentifier = dayjs().format("YYYY-MM-DD").subtract(1, 'day') + ".csv";
-    const filePath = path.join(__dirname, path.join("csv", fileIdentifier));
-    fs.unlink(filePath, (err) => {
-        console.error(err);
+const updateData = async () => {
+    const browser = await chromium.puppeteer.launch({
+        executablePath: await chromium.executablePath,
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        headless: chromium.headless,
     });
+
+    const page = await browser.newPage();
+
+
+    const client = await page.target().createCDPSession()
+    await client.send('Page.setDownloadBehavior', {
+        behavior: 'allow',
+        downloadPath: TMP,
+    });
+
+    await page.goto(process.env.DATA_URL);
+    const selector = '#priceInfoVO > div > div.mgt_5.t_left.mgb_30 > table > tbody > tr > td.fir.nobd_l.t_right > a:nth-child(1)';
+    await (await page.$(selector)).click();
+    page.on('dialog', async dialog => {
+        await dialog.accept();
+    });
+
+    await page.click('a');
+
+    while (!fs.existsSync(TMP)) {
+    }
+    console.log("DIR CHECK OK")
+
+    let flag = true;
+    let files;
+    while ((files = fs.readdirSync(TMP)).length == 0 || flag) {
+        for (let file of files) {
+            if (file.endsWith('xls')) flag = false;
+        }
+    }
+    console.log("FILE CHECK OK")
+    const filename = files[0].toString();
+    const xlsFile = await xlsx.readFile(path.join(TMP, filename));
+    console.log(xlsFile);
+    let newFilename = filename.split('.')[0].split('-')[0].split(')')[1] + ".csv";
+    await xlsx.writeFile(xlsFile, path.join(TMP, newFilename), {bookType: "csv"});
+    await browser.close();
+    console.log("RETURNED Filename : " + newFilename);
+    return {csvName: newFilename, xlsName: filename};
 }
 
-const loadOldDataFile = () => {
-    const fileIdentifier = dayjs().format("YYYY-MM-DD").subtract(-1, 'day') + ".csv";
-    const filePath = path.join(__dirname, path.join("csv", fileIdentifier));
-    const fileContent = fs.readFileSync(filePath);
-    return fileContent;
-}
+const uploadData = async (newFilename) => {
+    AWS.config.update({
+        region: process.env.S3_REGION,
+        accessKeyId: process.env.AWS_ACCESS_KEY,
+        secretAccessKey: process.env.AWS_ACCESS_SECRET
+    });
 
-const rollingDataFile = async () => {
-    let key = dayjs().format("YYYY-MM-DD");
-    key += "/data.csv";
+    const filePath = path.join(TMP, newFilename);
+    const data = fs.readFileSync(filePath, "utf-8");
 
-    // api call 제한으로 csv 파일로 대체
-    const fileContent = loadOldDataFile();
+    const S3 = new AWS.S3();
     const params = {
         Bucket: process.env.S3_BUCKET_NAME,
-        Key: key,
-        Body: fileContent,
+        Key: newFilename,
+        Body: data,
         ContentType: "text/csv",
     };
 
     await S3.upload(params, (err, data) => {
         if (err)
             console.error(err);
-        else
-            console.log(data);
     });
-};
-
-const getNewDataFile = () => {
-    // api 동기화 x
 }
 
-const fetchDataFile = async () => {
-    const fileIdentifier = dayjs().format("YYYY-MM-DD") + ".csv";
-    const filePath = path.join(__dirname, path.join("csv", fileIdentifier));
-    const data = fs.readFileSync(filePath, "utf-8");
-
-    const rows = data.split("\r\n");
-    let curr = 4;
-
-    const ID = 0;
-    const REGION = 1;
-    const PR_GASOLINE = 6;
-    const GASOLINE = 7;
-    const DIESEL = 8;
-    const KEROSENE = 9;
-
-    while (curr < rows.length) {
-        const curr_row = rows[curr].split(",");
-        if (curr_row[REGION].split(" ")[0] != "서울") {
-            break;
-        }
-
-        const target = await Station.updateOne({station_id: curr_row[ID]},
-            {
-                price_premium_gasoline: curr_row[PR_GASOLINE],
-                price_premium_gasoline: curr_row[GASOLINE],
-                price_diesel: curr_row[DIESEL],
-                price_kerosene: curr_row[KEROSENE],
-            });
-    }
+const sleep = (ms) => {
+    return new Promise(resolve => {
+        setTimeout(resolve, ms)
+    })
 }
 
-const batch = async () => {
+const updateDatabase = async (data) => {
     try {
-        await rollingDataFile();
-        await deleteOldFile();
-        await getNewDataFile();
-        await fetchDataFile();
+        await Station.updateOne({station_id: data.station_id},
+            {
+                price_premium_gasoline: data.price_premium_gasoline,
+                price_gasoline: data.price_gasoline,
+                price_diesel: data.price_diesel,
+                price_kerosene: data.price_kerosene,
+            });
     } catch (e) {
         console.error(e);
     }
+};
+
+const fetchToDatabase = async (filename) => {
+    const filePath = path.join(TMP, filename);
+    const xlsFile = await xlsx.readFile(filePath);
+    const sheet = xlsFile.Sheets["현재 판매가격(주유소)"];
+    let curr = 5;
+
+    const ID = 'A';
+    const REGION = 'B';
+    const PR_GASOLINE = 'G';
+    const GASOLINE = 'H';
+    const DIESEL = 'I';
+    const KEROSENE = 'J';
+
+    while (true) {
+        let station_id = sheet[ID + curr].w;
+        let region = sheet[REGION + curr].w
+        let price_premium_gasoline = sheet[PR_GASOLINE + curr].w;
+        let price_gasoline = sheet[GASOLINE + curr].w;
+        let price_diesel = sheet[DIESEL + curr].w;
+        let price_kerosene = sheet[KEROSENE + curr].w;
+        if (region.toString().split(" ")[0] != "서울") break;
+        await updateDatabase({
+            station_id,
+            region,
+            price_premium_gasoline,
+            price_gasoline,
+            price_diesel,
+            price_kerosene
+        });
+        curr++;
+    }
+
+    fs.rmSync(TMP, {recursive: true, force: true});
+};
+
+const run = async () => {
+    console.log("UPDATE DATA START");
+    const {csvName, xlsName} = await updateData();
+    console.log("UPLOAD S3 START");
+    await uploadData(csvName);
+    console.log("UPDATE DB START");
+    await fetchToDatabase(xlsName);
 }
 
-module.exports = batch;
+module.exports = {run, updateData};

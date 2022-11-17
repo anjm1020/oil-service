@@ -1,7 +1,6 @@
 const axios = require("axios");
 const fs = require("fs");
-const path = require("path");
-const dayjs = require("dayjs");
+const Batch = require("./batch");
 
 const getStationInfoData = async () => {
     const URL = process.env.API_STATION_URL;
@@ -30,49 +29,6 @@ const getAverageCostInfoData = async () => {
     return {data: res.data.RESULT.OIL};
 }
 
-const getStationCostInfoDataFromCsv = () => {
-    const fileIdentifier = dayjs().format("YYYY-MM-DD") + ".csv";
-    const filePath = path.join(__dirname, path.join("csv", fileIdentifier));
-    const data = fs.readFileSync(filePath, "utf-8");
-
-    const rows = data.split("\r\n");
-    let curr = 4;
-
-    const ID = 0;
-    const REGION = 1;
-    const NAME = 2;
-    const ADDRESS = 3;
-    const BRAND = 4;
-    const SELF = 5;
-    const PR_GASOLINE = 6;
-    const GASOLINE = 7;
-    const DIESEL = 8;
-    const KEROSENE = 9;
-
-    let res = [];
-    while (curr < rows.length) {
-        const curr_row = rows[curr].split(",");
-        if (curr_row[REGION].split(" ")[0] != "서울") {
-            break;
-        }
-        res.push({
-            station_id: curr_row[ID],
-            region: curr_row[REGION],
-            name: curr_row[NAME],
-            address: curr_row[ADDRESS],
-            brand: curr_row[BRAND],
-            isSelf: curr_row[SELF],
-            price_premium_gasoline: curr_row[PR_GASOLINE],
-            price_gasoline: curr_row[GASOLINE],
-            price_diesel: curr_row[DIESEL],
-            price_kerosene: curr_row[KEROSENE],
-        });
-        curr++;
-    }
-
-    return res;
-}
-
 const getNearStation = async (params) => {
     const {x, y, oil_type, sort} = params;
     const URL = process.env.API_NEAR_STATION_URL;
@@ -96,10 +52,10 @@ const getNearStation = async (params) => {
     const res = await axios.get(URL, config);
 
     const brandMap = {
-        HDO : "현대오일뱅크",
-        SOL : "S-OIL",
-        SKE : "SK에너지",
-        GSC : "GS칼텍스",
+        HDO: "현대오일뱅크",
+        SOL: "S-OIL",
+        SKE: "SK에너지",
+        GSC: "GS칼텍스",
     }
 
     const list = res.data.RESULT.OIL;
@@ -107,15 +63,15 @@ const getNearStation = async (params) => {
     for (let i = 0; i < list.length; i++) {
         const curr = list[i];
         data.push({
-            "station_id" : curr.UNI_ID,
+            "station_id": curr.UNI_ID,
             "brand": brandMap[curr.POLL_DIV_CD] || curr.POLL_DIV_CD,
-            "name" : curr.OS_NM,
-            "price" : curr.PRICE,
-            "distance" : curr.DISTANCE,
+            "name": curr.OS_NM,
+            "price": curr.PRICE,
+            "distance": curr.DISTANCE,
         })
     }
 
-    return {type:oilCodeMap[oil_type].name, data};
+    return {type: oilCodeMap[oil_type].name, data};
 }
 
 const getYosoStation = async () => {
@@ -135,7 +91,6 @@ const getYosoStation = async () => {
 module.exports = {
     getStationInfoData,
     getAverageCostInfoData,
-    getStationCostInfoDataFromCsv,
     getNearStation,
     getYosoStation,
 };
