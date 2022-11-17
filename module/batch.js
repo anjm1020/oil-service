@@ -14,7 +14,7 @@ const updateData = async () => {
         executablePath: await chromium.executablePath,
         args: chromium.args,
         defaultViewport: chromium.defaultViewport,
-        headless: chromium.headless,
+        headless: true,
     });
 
     const page = await browser.newPage();
@@ -49,7 +49,6 @@ const updateData = async () => {
     console.log("FILE CHECK OK")
     const filename = files[0].toString();
     const xlsFile = await xlsx.readFile(path.join(TMP, filename));
-    console.log(xlsFile);
     let newFilename = filename.split('.')[0].split('-')[0].split(')')[1] + ".csv";
     await xlsx.writeFile(xlsFile, path.join(TMP, newFilename), {bookType: "csv"});
     await browser.close();
